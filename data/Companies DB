@@ -1,0 +1,39 @@
+Companies DB
+
+"AMZN": {
+	"name": 
+	"sector"
+	"industry"
+	"community_rating"
+	"marcap"
+	"pe"
+	"forward_pe_1year"
+	"eps"
+
+	"price_range": {
+		"today": {
+			"high"
+			"low"
+			"date"
+		},
+		"52week": {
+			"high"
+			"low"
+			"date"
+		}
+	},
+	"year_target": {
+		"value"
+		"is_positive"
+		"date"
+	},
+	"financials" : {
+		http://www.nasdaq.com/symbol/amzn/financials?query=income-statement&data=quarterly
+		"2016": {
+			"annual": {
+
+			},
+			"quarterly"
+		}
+	}
+}

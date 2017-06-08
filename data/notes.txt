@@ -1,0 +1,35 @@
+EBIT - Earnings before interest and tax
+EBITDA - Earnings before interest tax depreciation amortization
+
+EBIT conflates to operating income or net income (SEC)
+EBITDA (utility and telecommunications sectors) conflates to cash flow
+
+quandl - qxwWfcLyGHo8vBZyHKsL
+
+/* ticker scraping from MFI */
+var list = '';
+var marcap = $('#MinimumMarketCap').val();
+$('#tableform table td:nth-child(2)').each(function(i){ list += $(this).text() +',' }); 
+console.log(marcap +': '+list);
+list = list.split(',');
+
+/* To parse ticker string */
+var b = a.split(',');
+var blen = b.length;
+var c = {};
+for(var i=0; i < blen; i = i+8 ){
+	var key = b[i];
+	var valu = b[i+1];
+	c[key] = valu;
+};
+
+console.log(c);
+
+/* Map ticker to name */
+for(var i=0; i<list.length; i++){
+	
+	var sym = list[i];
+	
+	console.log(sym+" : "+tick[sym]);
+
+}
