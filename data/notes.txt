@@ -13,6 +13,21 @@ $('#tableform table td:nth-child(2)').each(function(i){ list += $(this).text() +
 console.log(marcap +': '+list);
 list = list.split(',');
 
+/* ticker scraping from MFI is CSV format */
+var list = '';
+var marcap = $('#MinimumMarketCap').val();
+$('#tableform table tr').each(function(i){ 
+	$(this).find('td[align=center]').each(function(j){
+		if(j==0){}
+		if(j==1){ var x = $(this).text(); $(this).text(x+'M'); }
+		list += $(this).text() + ',';
+	});	
+	list += (marcap)+','+i+','+'\n'; 
+}); 
+console.log(marcap +': '+list);
+
+
+
 /* To parse ticker string */
 var b = a.split(',');
 var blen = b.length;

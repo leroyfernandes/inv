@@ -36,9 +36,10 @@ CREATE TABLE FINANCIALS (
 
 CREATE TABLE MAGIC_COMPANIES (
 	symbol TEXT,
-	capFilter INTEGER,
+	marcap INTEGER,
 	priceDate DATE,
 	quarterDate DATE,
+	capFilter INTEGER,
 	rank INTEGER
 );
 """
@@ -59,7 +60,7 @@ class Database:
 		c.execute("INSERT INTO COMPANIES VALUES (?, ?, ?, ?)",
 			(symbol, capFilter, priceDate, quarterDate, rank))
 
-	def addCompany(self):
+	def addCompaniesFromCSV(self):
 		c = self.conn.cursor()
 		with open('data/NASDAQ_NYSE_companylist.csv','rb') as fin: # `with` statement available in 2.5+
 			# csv.DictReader uses first line in file for column headings by default
@@ -73,8 +74,21 @@ class Database:
 	def addMagicCompany(self, symbol, capFilter, priceDate, quarterDate, rank ):
 		c = self.conn.cursor()
 		c.execute("INSERT INTO MAGIC_COMPANIES VALUES (?, ?, ?, ?, ?)",
-			(symbol, capFilter, priceDate, quarterDate, rank))
+			(symbol, capFilter, marcap, priceDate, quarterDate, rank))
 		self.conn.commit()
+
+	def addMagicCompaniesFromCSV(self, magic_file):
+		if magic_file:
+			c = self.conn.cursor()
+			csv_path = 'data/magic_csv/'+magic_file+'.csv'
+			with open(csv_path,'rb') as fin: # `with` statement available in 2.5+
+				# csv.DictReader uses first line in file for column headings by default
+				dr = csv.DictReader(fin) # comma is default delimiter
+				to_db = [( i['symbol'], i['marcap'], i['priceDate'], i['quarterDate'], i['capFilter'], i['rank'] ) for i in dr]
+
+			c.executemany("INSERT INTO MAGIC_COMPANIES (symbol, marcap, priceDate, quarterDate, capFilter, rank) VALUES (?, ?, ?, ?, ?, ?);", to_db)
+			self.conn.commit()
+			#self.conn.close()
 
 # This class will fetch a web page from the WWW. However, if the web page
 # exists in the cache, it will instead use the cached version.
@@ -111,9 +125,9 @@ class Magic:
 
 	def loadCompaniesCSV(self):
 		print "Load Companies CSV"
-		self.db.addCompany()
+		self.db.addCompaniesFromCSV()
 
-	def loadMagicCompaniesCSV(self):
+	def loadMagicCompany(self):
 		print "Load Magic Companies CSV"
 		symbol = "AMAG"
 		capFilter = 500
@@ -123,13 +137,17 @@ class Magic:
 
 		self.db.addMagicCompany(symbol, capFilter, priceDate, quarterDate, rank )
 
+	def loadMagicCompaniesCSV(self, magic_file):
+		print "Load Magic Companies CSV"
+		self.db.addMagicCompaniesFromCSV(magic_file)
 
 	def run(self):
 		for i in range(1, len(sys.argv)):
 			if sys.argv[i] == "--companies":
 				self.loadCompaniesCSV()
-			if sys.argv[i] == "--mcomp":
-				self.loadMagicCompaniesCSV()
+			if sys.argv[i] == "--mcompanies":
+				magic_file = sys.argv[2]
+				self.loadMagicCompaniesCSV(magic_file)
 			if sys.argv[i] == "--help":
 				print
 				print "*****************************"
