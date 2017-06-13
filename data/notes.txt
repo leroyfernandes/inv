@@ -9,17 +9,27 @@ quandl - qxwWfcLyGHo8vBZyHKsL
 /* ticker scraping from MFI */
 var list = '';
 var marcap = $('#MinimumMarketCap').val();
-$('#tableform table td:nth-child(2)').each(function(i){ list += $(this).text() +',' }); 
-console.log(marcap +': '+list);
-list = list.split(',');
-
-/* ticker scraping from MFI is CSV format */
-var list = '';
-var marcap = $('#MinimumMarketCap').val();
+var date = new Date();
+var fullYear = date.getFullYear();
 $('#tableform table tr').each(function(i){ 
 	$(this).find('td[align=center]').each(function(j){
 		if(j==0){}
-		if(j==1){ var x = $(this).text(); $(this).text(x+'M'); }
+		if(j==1){ 
+			$this = $(this);
+			var x = parseInt( $this.text().replace(',',''), 10 );
+			$this.text(x);
+		}
+		if(j==2){
+			$this = $(this);
+			var x = fullYear + $this.text().replace('/',''); 
+			$this.text(x); 
+		}
+		if(j==3){
+			$this = $(this);
+			var year = $this.text().split('/')[0] == 12 ? fullYear-1 : fullYear; 
+			var x = year+$this.text().replace('/',''); 
+			$this.text(x); 
+		}
 		list += $(this).text() + ',';
 	});	
 	list += (marcap)+','+i+','+'\n'; 

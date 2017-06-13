@@ -55,7 +55,38 @@ class Database:
 			c = self.conn.cursor()
 			c.executescript( SCHEMA )
 	
-	def addCompanies(self, symbol, name, sector, induztry):
+	def getSectors(self):
+		c = self.conn.cursor()
+		c.execute("SELECT DISTINCT sector FROM COMPANIES")
+		return c.fetchall();
+
+	def getCapFilters(self):
+		c = self.conn.cursor()
+		c.execute("SELECT DISTINCT capFilter FROM MAGIC_COMPANIES")
+		return c.fetchall();
+
+	def getCompanySector(self, symbol):
+		print "Method: getCompanySector"
+		c = self.conn.cursor()
+		c.execute("SELECT sector FROM COMPANIES WHERE symbol=?", (symbol,))
+		sector = c.fetchone();
+		if sector is None:
+			return "Unknown"
+		else:
+			return sector[0]
+
+	def getLatestPriceDate(self):
+		c = self.conn.cursor()
+		c.execute("SELECT distinct priceDate from MAGIC_COMPANIES ORDER BY priceDate DESC LIMIT 1")
+		return c.fetchone()[0];
+
+	def getRankedByCapFilter(self, capFilter):
+		priceDate =  self.getLatestPriceDate()
+		c = self.conn.cursor()
+		c.execute("SELECT symbol FROM MAGIC_COMPANIES WHERE capFilter=? AND priceDate=?", (capFilter, priceDate, ))
+		return c.fetchall();
+
+	def addCompanies(self, symbol, name, sector, industry):
 		c = self.conn.cursor()
 		c.execute("INSERT INTO COMPANIES VALUES (?, ?, ?, ?)",
 			(symbol, capFilter, priceDate, quarterDate, rank))
@@ -116,12 +147,136 @@ class PageCache:
 
 class EmptyClass: pass
 
+class MagicPage:
+	def __init__(self):
+		print "MagicPage__init__"
+		self.db = Database()
+
+	html_wrapper = """
+		<!DOCTYPE html>
+		<html lang="en">
+			<head>%s<head>
+			<body>%s</body>
+		<html>
+	"""
+
+	head_wrapper = """
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Magic Formula Comparator</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link href="css/magicpage.css" rel="stylesheet">
+		<!--<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>-->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	"""
+
+	body_wrapper = """
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-3 col-md-2 sidebar">
+					<ul class="nav nav-sidebar">
+						<li class="active"><a href="#">Overview <span class="sr-only">(current)</span></a></li>
+						<li><a href="#">Reports</a></li>
+						<li><a href="#">Analytics</a></li>
+						<li><a href="#">Export</a></li>
+					</ul>
+				</div>
+				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+					<h2 class="sub-header">Section title</h2>
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead>%s</thead>
+							<tbody>%s</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	"""
+
+	thead_tr_wrapper = """
+		<tr>
+			<th class""></th>
+			%s
+		</tr>
+	"""
+
+	thead_th_wrapper = """
+		<th>%s</th>
+	"""
+
+	tr_wrapper = """
+		<tr class="capFilter %s">
+			<td class"capFilter-rank %s">%s</td>
+			%s
+		</tr>
+	"""
+
+	td_wrapper = """
+		<td class="sector %s" title="Sector: %s">%s</td>
+	"""
+
+	def getSectorClass(self, symbol):
+		print "getSectorClass"
+		#print symbol
+		sector = self.db.getCompanySector(symbol)
+		return "sector-%s" % sector.lower().replace(" ", "-")
+
+	def makeThead(self,  capFilterRankedLength):
+		thead_th = ""
+		for i in range(capFilterRankedLength):
+			thead_th = thead_th + self.thead_th_wrapper % str(i+1)
+
+		thead_tr = self.thead_tr_wrapper % thead_th
+		return thead_tr
+
+	def makeTbody(self, capFilterRanked, capFilter):
+		tbody_tr = ""
+		tbody_td = ""
+		for symbol in capFilterRanked:
+			sym = str(symbol[0])
+			symSectorClass = self.getSectorClass(sym)
+			symSector = self.db.getCompanySector(sym)
+			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symSector, sym)
+
+		tbody_tr = self.tr_wrapper % ("tr"+str(capFilter), "tr"+str(capFilter), capFilter, tbody_td)
+		return tbody_tr
+
+	def makeHTML(self):
+		import datetime
+
+		program = 'mfiScreenerComparator'
+		#now = datetime.datetime.today().strftime("%Y%m%d-%H%M%S")
+		filename = program + '.html'
+		f = open(filename,'w')
+
+		thead = ""
+		tbody = ""
+		capFilterRanked = []
+		capFilters = self.db.getCapFilters()
+		print capFilters
+		for capFilter in capFilters:
+			capFilterRanked = self.db.getRankedByCapFilter(capFilter[0])
+			tbody = tbody + self.makeTbody(capFilterRanked, capFilter[0])
+
+		thead = self.makeThead(len(capFilterRanked))
+
+		head = self.head_wrapper
+		body = self.body_wrapper % (thead, tbody)
+		html = self.html_wrapper % (head, body)
+
+		f.write(html)
+		f.close()
+
 # The Pleco class contains logic for scraping the stock information from the
 # internet.
 class Magic:
 	def __init__(self):
 		self.db = Database()
 		#self.webCache = PageCache()
+		self.mp = MagicPage()
 
 	def loadCompaniesCSV(self):
 		print "Load Companies CSV"
@@ -148,6 +303,8 @@ class Magic:
 			if sys.argv[i] == "--mcompanies":
 				magic_file = sys.argv[2]
 				self.loadMagicCompaniesCSV(magic_file)
+			if sys.argv[i] == "--makeMagicPage":
+				self.mp.makeHTML()
 			if sys.argv[i] == "--help":
 				print
 				print "*****************************"
