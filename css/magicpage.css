@@ -1,4 +1,9 @@
 
+.selected-symbol-highlight{
+	border: 2px solid red;
+}
+
+
 .sector{
 	
 }

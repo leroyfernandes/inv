@@ -66,7 +66,7 @@ class Database:
 		return c.fetchall();
 
 	def getCompanySector(self, symbol):
-		print "Method: getCompanySector"
+		#print "Method: getCompanySector"
 		c = self.conn.cursor()
 		c.execute("SELECT sector FROM COMPANIES WHERE symbol=?", (symbol,))
 		sector = c.fetchone();
@@ -83,8 +83,18 @@ class Database:
 	def getRankedByCapFilter(self, capFilter):
 		priceDate =  self.getLatestPriceDate()
 		c = self.conn.cursor()
-		c.execute("SELECT symbol FROM MAGIC_COMPANIES WHERE capFilter=? AND priceDate=?", (capFilter, priceDate, ))
+		#c.execute("SELECT symbol FROM MAGIC_COMPANIES WHERE capFilter=? AND priceDate=?", (capFilter, priceDate, ))
+		c.execute("SELECT symbol FROM MAGIC_COMPANIES WHERE capFilter=?", (capFilter, ))
 		return c.fetchall();
+
+	def getScoredCompanies(self):
+		capFilters = self.getCapFilters()
+		c = self.conn.cursor()
+		for capFilter in capFilters:
+			c.execute("SELECT symbol from MAGIC_COMPANIES where capFilter=?", (capFilter, ))
+		return c.fetchall();
+		
+
 
 	def addCompanies(self, symbol, name, sector, industry):
 		c = self.conn.cursor()
@@ -149,7 +159,7 @@ class EmptyClass: pass
 
 class MagicPage:
 	def __init__(self):
-		print "MagicPage__init__"
+		#print "MagicPage__init__"
 		self.db = Database()
 
 	html_wrapper = """
@@ -170,6 +180,7 @@ class MagicPage:
 		<!--<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>-->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="js/magicpage.js"></script>
 	"""
 
 	body_wrapper = """
@@ -215,11 +226,11 @@ class MagicPage:
 	"""
 
 	td_wrapper = """
-		<td class="sector %s" title="Sector: %s">%s</td>
+		<td class="magic-symbol sector %s %s" title="Sector: %s">%s</td>
 	"""
 
 	def getSectorClass(self, symbol):
-		print "getSectorClass"
+		#print "getSectorClass"
 		#print symbol
 		sector = self.db.getCompanySector(symbol)
 		return "sector-%s" % sector.lower().replace(" ", "-")
@@ -239,7 +250,8 @@ class MagicPage:
 			sym = str(symbol[0])
 			symSectorClass = self.getSectorClass(sym)
 			symSector = self.db.getCompanySector(sym)
-			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symSector, sym)
+			symClass = "class-"+sym
+			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symSector, sym)
 
 		tbody_tr = self.tr_wrapper % ("tr"+str(capFilter), "tr"+str(capFilter), capFilter, tbody_td)
 		return tbody_tr
@@ -256,7 +268,7 @@ class MagicPage:
 		tbody = ""
 		capFilterRanked = []
 		capFilters = self.db.getCapFilters()
-		print capFilters
+		#print capFilters
 		for capFilter in capFilters:
 			capFilterRanked = self.db.getRankedByCapFilter(capFilter[0])
 			tbody = tbody + self.makeTbody(capFilterRanked, capFilter[0])
@@ -279,11 +291,11 @@ class Magic:
 		self.mp = MagicPage()
 
 	def loadCompaniesCSV(self):
-		print "Load Companies CSV"
+		#print "Load Companies CSV"
 		self.db.addCompaniesFromCSV()
 
 	def loadMagicCompany(self):
-		print "Load Magic Companies CSV"
+		#print "Load Magic Companies CSV"
 		symbol = "AMAG"
 		capFilter = 500
 		priceDate = 20170602
@@ -293,7 +305,7 @@ class Magic:
 		self.db.addMagicCompany(symbol, capFilter, priceDate, quarterDate, rank )
 
 	def loadMagicCompaniesCSV(self, magic_file):
-		print "Load Magic Companies CSV"
+		#print "Load Magic Companies CSV"
 		self.db.addMagicCompaniesFromCSV(magic_file)
 
 	def run(self):
