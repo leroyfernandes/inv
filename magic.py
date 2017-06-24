@@ -93,8 +93,15 @@ class Database:
 		for capFilter in capFilters:
 			c.execute("SELECT symbol from MAGIC_COMPANIES where capFilter=?", (capFilter, ))
 		return c.fetchall();
-		
-
+	
+	def getCompanyName(self, symbol):
+		c = self.conn.cursor()
+		c.execute("SELECT name from COMPANIES where symbol=?", (symbol, ))
+		name = c.fetchone();
+		if name is None:
+			return "Unknown"
+		else:
+			return name[0]
 
 	def addCompanies(self, symbol, name, sector, industry):
 		c = self.conn.cursor()
@@ -181,9 +188,36 @@ class MagicPage:
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script src="js/magicpage.js"></script>
+		<link href="https://fonts.googleapis.com/css?family=Titillium+Web|Ubuntu+Mono" rel="stylesheet">
 	"""
 
 	body_wrapper = """
+		<nav class="navbar navbar-default navbar-fixed-top">
+			<div class="container-fluid">
+				<div class="sector-legend">
+					<div class="sector-tile">
+						<span class="sector sector-consumer-services"></span>
+						<span class="sector-name">Consumer Services</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-health-care"></span>
+						<span class="sector-name">Health Care</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-technology"></span>
+						<span class="sector-name">Technology</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-capital-goods"></span>
+						<span class="sector-name">Capital Goods</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-unknown"></span>
+						<span class="sector-name">Unknown</span>
+					</div>
+				</div>
+			</div>
+		</nav>
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-sm-3 col-md-2 sidebar">
@@ -226,7 +260,9 @@ class MagicPage:
 	"""
 
 	td_wrapper = """
-		<td class="magic-symbol sector %s %s" title="Sector: %s">%s</td>
+		<td class="">
+			<div class="magic-symbol sector %s %s" title="%s" data-content="Sector: %s<br/>link" data-trigger="hover">%s</div>
+		</td>
 	"""
 
 	def getSectorClass(self, symbol):
@@ -250,8 +286,9 @@ class MagicPage:
 			sym = str(symbol[0])
 			symSectorClass = self.getSectorClass(sym)
 			symSector = self.db.getCompanySector(sym)
+			symName = self.db.getCompanyName(sym)
 			symClass = "class-"+sym
-			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symSector, sym)
+			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symName, symSector, sym)
 
 		tbody_tr = self.tr_wrapper % ("tr"+str(capFilter), "tr"+str(capFilter), capFilter, tbody_td)
 		return tbody_tr

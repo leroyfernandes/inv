@@ -1,17 +1,56 @@
-
-.selected-symbol-highlight{
-	border: 2px solid red;
+*{
+	font-family: 'Titillium Web', sans-serif;
+	/*font-family: 'Ubuntu Mono', monospace;*/
 }
 
+.selected-symbol-highlight{
+	border: 1px solid red;
+
+}
+
+table tbody tr td {
+	padding: 0 !important;
+}
+
+.navbar{
+	min-height: 40px;
+}
+
+	.navbar .sector-legend{
+		display: inline-block;
+		float: right;
+	}
+
+	.navbar .sector-tile{
+		display: inline-block;
+		padding: 0 10px;
+	}
+	
+	.navbar .sector-legend .sector-tile .sector{
+		display: inline-block;
+		height: 10px;
+		width: 10px;
+		float: left;
+		margin-top: 6px;
+		margin-right: 4px;
+	}
+
+	.navbar .sector-legend .sector-tile .sector-name{
+		font-size: 10px;
+	}
 
 .sector{
-	
+	padding: 4px;
+	width: 48px;
 }
 
 .sector.sector-consumer-services{background-color: #8797B2}
 .sector.sector-health-care{background-color: #A7A5C6}
 .sector.sector-technology{background-color: #66CED6}
-.sector.sector-technology{background-color: #66CED6}
 .sector.sector-capital-goods{background-color: #758ECD}
 .sector.sector-unknown{background-color: #888}
 
+.popover-title{
+	font-family: 'Titillium Web', sans-serif;
+	font-weight: 600;
+}
