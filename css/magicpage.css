@@ -12,6 +12,24 @@ table tbody tr td {
 	padding: 0 !important;
 }
 
+	.magic-symbol{
+		position: relative;
+	}
+
+		.magic-symbol .reversion{
+			background-color: red;
+		    position: absolute;
+		    top: 0;
+		    left: 0;
+		    width: 100%;
+		}
+
+			.magic-symbol .reversion .reversion-percent{
+				height: 2px;
+			    background-color: green;
+			    display: block;
+			}
+
 .navbar{
 	min-height: 40px;
 }
@@ -19,6 +37,7 @@ table tbody tr td {
 	.navbar .sector-legend{
 		display: inline-block;
 		float: right;
+		width: 60%;
 	}
 
 	.navbar .sector-tile{
@@ -41,6 +60,7 @@ table tbody tr td {
 
 .sector{
 	padding: 4px;
+	height: 35px;
 	width: 48px;
 }
 
@@ -50,7 +70,12 @@ table tbody tr td {
 .sector.sector-capital-goods{background-color: #758ECD}
 .sector.sector-unknown{background-color: #888}
 
-.popover-title{
+.popover .popover-title{
 	font-family: 'Titillium Web', sans-serif;
 	font-weight: 600;
 }
+
+	.popover .popover-content{
+		font-size: 0.8em;
+	}
+

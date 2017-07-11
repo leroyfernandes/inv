@@ -58,3 +58,47 @@ for(var i=0; i<list.length; i++){
 	console.log(sym+" : "+tick[sym]);
 
 }
+
+5085481380
+
+/* To extract unique magic symbols to get yahoo quotes */
+var a = []; 
+
+$('.magic-symbol').each(function(){
+
+	var name = $(this).find('.symbol').text();
+
+	if(a.indexOf(name) == -1){
+
+		a.push(name);
+
+	}
+});
+
+a = a.join(',');
+
+a;
+
+https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20in%20(%22<insert comma-separated symbols here>%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=
+
+	Symbol TEXT,
+	LastTradeDate DATE,
+	LastTradePriceOnly INTEGER,
+	PERatio DECIMAL(1,2)
+	PEGRatio INTEGER,
+	MarketCapitalization TEXT,
+	EBITDA TEXT,
+	EPSEstimateCurrentYear INTEGER,
+	EPSEstimateNextQuarter INTEGER,
+	EPSEstimateNextYear INTEGER,
+	PriceEPSEstimateCurrentYear INTEGER,
+	PriceEPSEstimateNextYear INTEGER,
+	MarketCapitalization TEXT,
+	ShortRatio INTEGER,
+	OneyrTargetPrice INTEGER,
+	FiftydayMovingAverage INTEGER,
+	TwoHundreddayMovingAverage INTEGER,
+	PercentChangeFromFiftydayMovingAverage INTEGER,
+	PercentChangeFromTwoHundreddayMovingAverage INTEGER,
+	YearHigh INTEGER,
+	YearLow INTEGER

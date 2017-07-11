@@ -7,6 +7,7 @@ import sqlite3, csv
 import urllib
 import hashlib
 import time
+import json
 
 # This program will first download a list of stocks from the TSX. Then, for
 # each stock, it grabs company information, including company name and
@@ -27,11 +28,28 @@ CREATE TABLE COMPANIES (
 );
 
 CREATE TABLE FINANCIALS (
-	symbol TEXT,
-	date DATE,
-	price INTEGER,
-	marcap INTEGER,
-	pe DECIMAL(1,2)
+	Symbol TEXT,
+	LastTradeDate DATE,
+	LastTradePriceOnly INTEGER,
+	PERatio DECIMAL(1,2),
+	PEGRatio INTEGER,
+	MarketCapitalization TEXT,
+	EBITDA TEXT,
+	EPSEstimateCurrentYear INTEGER,
+	EPSEstimateNextQuarter INTEGER,
+	EPSEstimateNextYear INTEGER,
+	PriceEPSEstimateCurrentYear INTEGER,
+	PriceEPSEstimateNextYear INTEGER,
+	ShortRatio INTEGER,
+	OneyrTargetPrice INTEGER,
+	FiftydayMovingAverage INTEGER,
+	TwoHundreddayMovingAverage INTEGER,
+	PercentChangeFromFiftydayMovingAverage INTEGER,
+	PercentChangeFromTwoHundreddayMovingAverage INTEGER,
+	YearHigh INTEGER,
+	YearLow INTEGER,
+	DividendShare INTEGER,
+	DividendYield INTEGER
 );
 
 CREATE TABLE MAGIC_COMPANIES (
@@ -138,6 +156,56 @@ class Database:
 			self.conn.commit()
 			#self.conn.close()
 
+	def parseYahooQuotesJSON(self, yahoo_json):
+		if yahoo_json:
+			c = self.conn.cursor()
+			json_path = 'data/yahoo_json/'+yahoo_json+'.json'
+			with open(json_path) as fin:    
+				data = json.load(fin)
+
+			for e in data['query']['results']['quote']:
+				Symbol = e['Symbol']
+				LastTradeDate = e['LastTradeDate']
+				LastTradePriceOnly = e['LastTradePriceOnly']
+				PERatio = e['PERatio']
+				PEGRatio = e['PEGRatio']
+				MarketCapitalization = e['MarketCapitalization']
+				EBITDA = e['EBITDA']
+				EPSEstimateCurrentYear = e['EPSEstimateCurrentYear']
+				EPSEstimateNextQuarter = e['EPSEstimateNextQuarter']
+				EPSEstimateNextYear = e['EPSEstimateNextYear']
+				PriceEPSEstimateCurrentYear = e['PriceEPSEstimateCurrentYear']
+				PriceEPSEstimateNextYear = e['PriceEPSEstimateNextYear']
+				ShortRatio = e['ShortRatio']
+				OneyrTargetPrice = e['OneyrTargetPrice']
+				FiftydayMovingAverage = e['FiftydayMovingAverage']
+				TwoHundreddayMovingAverage = e['TwoHundreddayMovingAverage']
+				PercentChangeFromFiftydayMovingAverage = e['PercentChangeFromFiftydayMovingAverage']
+				PercentChangeFromTwoHundreddayMovingAverage = e['PercentChangeFromTwoHundreddayMovingAverage']
+				YearHigh = e['YearHigh']
+				YearLow = e['YearLow']
+				DividendShare = e['DividendShare']
+				DividendYield = e['DividendYield']
+				print "Row: " + Symbol
+				c.execute("INSERT INTO FINANCIALS VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+					(Symbol, LastTradeDate, LastTradePriceOnly, PERatio, PEGRatio, MarketCapitalization, EBITDA, 
+						EPSEstimateCurrentYear, EPSEstimateNextQuarter, EPSEstimateNextYear, PriceEPSEstimateCurrentYear, PriceEPSEstimateNextYear, 
+						ShortRatio, OneyrTargetPrice, FiftydayMovingAverage, TwoHundreddayMovingAverage, 
+						PercentChangeFromFiftydayMovingAverage, PercentChangeFromTwoHundreddayMovingAverage, 
+						YearHigh, YearLow, DividendShare, DividendYield ))
+			
+			self.conn.commit()
+
+	def getFinancials(self, symbol):
+		c = self.conn.cursor()
+		c.execute("SELECT LastTradeDate, LastTradePriceOnly, PERatio, PEGRatio, MarketCapitalization, EBITDA, EPSEstimateCurrentYear, EPSEstimateNextQuarter, EPSEstimateNextYear, PriceEPSEstimateCurrentYear, PriceEPSEstimateNextYear, ShortRatio, OneyrTargetPrice, FiftydayMovingAverage, TwoHundreddayMovingAverage, PercentChangeFromFiftydayMovingAverage, PercentChangeFromTwoHundreddayMovingAverage, YearHigh, YearLow, DividendShare, DividendYield FROM FINANCIALS WHERE symbol=? ORDER BY LastTradeDate DESC LIMIT 1", (symbol, ))
+		a = c.fetchall()[0]
+		a_a = []
+		for item in a:
+			a_a.append(item)
+		#print a_a
+		return a_a;
+
 # This class will fetch a web page from the WWW. However, if the web page
 # exists in the cache, it will instead use the cached version.
 class PageCache:
@@ -211,6 +279,37 @@ class MagicPage:
 						<span class="sector sector-capital-goods"></span>
 						<span class="sector-name">Capital Goods</span>
 					</div>
+
+					<div class="sector-tile">
+						<span class="sector sector-basic-industries"></span>
+						<span class="sector-name">Basic Industries</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-energy"></span>
+						<span class="sector-name">Energy</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-consumer-durables"></span>
+						<span class="sector-name">Consumer Durables</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-miscellaneous"></span>
+						<span class="sector-name">Misc</span>
+					</div>
+
+					<div class="sector-tile">
+						<span class="sector sector-consumer-non-durables"></span>
+						<span class="sector-name">Consumer ND</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-finance"></span>
+						<span class="sector-name">Finance</span>
+					</div>
+					<div class="sector-tile">
+						<span class="sector sector-transportation"></span>
+						<span class="sector-name">Transportation</span>
+					</div>
+
 					<div class="sector-tile">
 						<span class="sector sector-unknown"></span>
 						<span class="sector-name">Unknown</span>
@@ -258,10 +357,35 @@ class MagicPage:
 			%s
 		</tr>
 	"""
+	data_content = """
+		Sector: %s<br/>
+		Reversion: %s (%s-%s-%s)<br/>
+		PE Ratio: %s<br/>
+		PEG Ratio: %s<br/>
+		DividendShare: %s<br/>
+		DividendYield: %s<br/>
+		MarketCapitalization: %s<br/>
+		EBITDA: %s<br/>
+		EPSEstimateCurrentYear: %s<br/>
+		EPSEstimateNextQuarter: %s<br/>
+		EPSEstimateNextYear: %s<br/>
+		PriceEPSEstimateCurrentYear: %s<br/>
+		PriceEPSEstimateNextYear: %s<br/>
+		ShortRatio: %s<br/>
+		OneyrTargetPrice: %s<br/>
+		FiftydayMovingAverage: %s (%s)<br/>
+		TwoHundreddayMovingAverage: %s (%s)<br/>
+
+	"""
 
 	td_wrapper = """
 		<td class="">
-			<div class="magic-symbol sector %s %s" title="%s" data-content="Sector: %s<br/>link" data-trigger="hover">%s</div>
+			<div class="magic-symbol sector %s %s" data-sector="%s" title="%s" data-content="%s" data-trigger="hover" data-peg="%s">
+				<span class="symbol">%s</span>
+				<span class="reversion">
+					<span class="reversion-percent" style="width:%s"></span>
+				</span>
+			</div>
 		</td>
 	"""
 
@@ -282,13 +406,22 @@ class MagicPage:
 	def makeTbody(self, capFilterRanked, capFilter):
 		tbody_tr = ""
 		tbody_td = ""
+		data_content = ""
 		for symbol in capFilterRanked:
 			sym = str(symbol[0])
 			symSectorClass = self.getSectorClass(sym)
 			symSector = self.db.getCompanySector(sym)
 			symName = self.db.getCompanyName(sym)
+			symFinancials = self.db.getFinancials(sym)
 			symClass = "class-"+sym
-			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symName, symSector, sym)
+			reversion = round((symFinancials[17]-symFinancials[1])/(symFinancials[17]-symFinancials[18]), 2)
+			#print reversion
+			#LastTradeDate, LastTradePriceOnly, PERatio, PEGRatio, MarketCapitalization, EBITDA, 
+			#EPSEstimateCurrentYear, EPSEstimateNextQuarter, EPSEstimateNextYear, PriceEPSEstimateCurrentYear, PriceEPSEstimateNextYear, ShortRatio, OneyrTargetPrice, 
+			#FiftydayMovingAverage, TwoHundreddayMovingAverage, PercentChangeFromFiftydayMovingAverage, PercentChangeFromTwoHundreddayMovingAverage,
+
+			data_content = self.data_content % ( symSector, reversion, symFinancials[18], symFinancials[1], symFinancials[17], symFinancials[2], symFinancials[3], symFinancials[19], symFinancials[20], symFinancials[4], symFinancials[5], symFinancials[6], symFinancials[7], symFinancials[8], symFinancials[9], symFinancials[10], symFinancials[11], symFinancials[12], symFinancials[13], symFinancials[15], symFinancials[14], symFinancials[16] )
+			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symSectorClass, symName, data_content, sym, str((reversion*100))+'%')
 
 		tbody_tr = self.tr_wrapper % ("tr"+str(capFilter), "tr"+str(capFilter), capFilter, tbody_td)
 		return tbody_tr
@@ -327,6 +460,12 @@ class Magic:
 		#self.webCache = PageCache()
 		self.mp = MagicPage()
 
+	def setupMagic(self):
+		self.db = Database()
+		#self.webCache = PageCache()
+		self.mp = MagicPage()
+		#self.db.addCompaniesFromCSV()
+
 	def loadCompaniesCSV(self):
 		#print "Load Companies CSV"
 		self.db.addCompaniesFromCSV()
@@ -345,8 +484,13 @@ class Magic:
 		#print "Load Magic Companies CSV"
 		self.db.addMagicCompaniesFromCSV(magic_file)
 
+	def parseYahooQuotesJSON(self, yahoo_file):
+		self.db.parseYahooQuotesJSON(yahoo_file)
+
 	def run(self):
 		for i in range(1, len(sys.argv)):
+			if sys.argv[i] == "--setupMagic":
+				self.setupMagic()
 			if sys.argv[i] == "--companies":
 				self.loadCompaniesCSV()
 			if sys.argv[i] == "--mcompanies":
@@ -354,6 +498,10 @@ class Magic:
 				self.loadMagicCompaniesCSV(magic_file)
 			if sys.argv[i] == "--makeMagicPage":
 				self.mp.makeHTML()
+			if sys.argv[i] == "--yahoo":
+				yahoo_file = sys.argv[2]
+				self.parseYahooQuotesJSON(yahoo_file)
+				
 			if sys.argv[i] == "--help":
 				print
 				print "*****************************"
