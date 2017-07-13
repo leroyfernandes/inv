@@ -43,15 +43,33 @@ $(document).ready(function(){
 		}, {});
 
 		Object.keys(percentObject).forEach(function(i){
-			console.log(i);
 			var sector = '.sector-legend .'+i;
 			$(sector).parent('.sector-tile').find('.sector-name').append(' ('+((percentObject[i]/magic_symbols_length)*100).toFixed(2)+'%) ');
 		});
 	}();
 
 	/*
-	* mean reversion
+	*	highlight symbol per marcap limit with best PEG Ratio	
 	*/
+
+	var pegSelect = function(){
+
+		$('table .capFilter').each(function(){
+			var pegValue, pegSymbol;
+			$(this).find('.magic-symbol').each(function(){
+				var data_peg = $(this).data('peg');
+				if (pegValue === undefined ){
+					pegValue = data_peg;
+				}else{
+					if(pegValue > data_peg){
+						pegValue = data_peg;
+						pegSymbol = $(this);
+					}
+				}
+			});
+			$(pegSymbol).addClass('pegWinner');
+		});
+	}();
 
 
 

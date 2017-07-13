@@ -327,7 +327,7 @@ class MagicPage:
 						<li><a href="#">Export</a></li>
 					</ul>
 				</div>
-				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+				<div class="col-sm-9 col-md-10 main">
 					<h2 class="sub-header">Section title</h2>
 					<div class="table-responsive">
 						<table class="table table-striped">
@@ -421,7 +421,7 @@ class MagicPage:
 			#FiftydayMovingAverage, TwoHundreddayMovingAverage, PercentChangeFromFiftydayMovingAverage, PercentChangeFromTwoHundreddayMovingAverage,
 
 			data_content = self.data_content % ( symSector, reversion, symFinancials[18], symFinancials[1], symFinancials[17], symFinancials[2], symFinancials[3], symFinancials[19], symFinancials[20], symFinancials[4], symFinancials[5], symFinancials[6], symFinancials[7], symFinancials[8], symFinancials[9], symFinancials[10], symFinancials[11], symFinancials[12], symFinancials[13], symFinancials[15], symFinancials[14], symFinancials[16] )
-			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symSectorClass, symName, data_content, sym, str((reversion*100))+'%')
+			tbody_td = tbody_td + self.td_wrapper % (symSectorClass, symClass, symSectorClass, symName, data_content, symFinancials[3], sym, str((reversion*100))+'%')
 
 		tbody_tr = self.tr_wrapper % ("tr"+str(capFilter), "tr"+str(capFilter), capFilter, tbody_td)
 		return tbody_tr

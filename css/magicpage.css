@@ -8,6 +8,14 @@
 
 }
 
+.main{
+	margin-top: 50px;
+}
+
+.sidebar{
+	margin-top: 50px;
+}
+
 table tbody tr td {
 	padding: 0 !important;
 }
@@ -29,6 +37,10 @@ table tbody tr td {
 			    background-color: green;
 			    display: block;
 			}
+
+	.magic-symbol.pegWinner .symbol{
+		text-decoration: underline;
+	}
 
 .navbar{
 	min-height: 40px;
