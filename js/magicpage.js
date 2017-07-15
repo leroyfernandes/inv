@@ -49,11 +49,10 @@ $(document).ready(function(){
 	}();
 
 	/*
-	*	highlight symbol per marcap limit with best PEG Ratio	
+	*	highlight and prepend to beginning of table symbol per marcap limit with best PEG Ratio	
 	*/
 
 	var pegSelect = function(){
-
 		$('table .capFilter').each(function(){
 			var pegValue, pegSymbol;
 			$(this).find('.magic-symbol').each(function(){
@@ -69,6 +68,15 @@ $(document).ready(function(){
 			});
 			$(pegSymbol).addClass('pegWinner');
 		});
+
+		$('.table .magic-symbol.pegWinner').each(function(){
+			var $pegWinner = $(this).closest('td');
+			var $capTr = $pegWinner.closest('tr');
+
+			$capTr.prepend($pegWinner.clone(true));
+		});
+
+		$('.table thead tr').prepend('<th class="peg">PEG</th>');
 	}();
 
 
