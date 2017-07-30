@@ -2,11 +2,6 @@ $(document).ready(function(){
 
 	$('table .magic-symbol').popover({html: true, placement: 'left auto'});
 
-	$('table').on('click', '.popover-content', function(){
-		var url = $(this).attr('href'); 
-    	window.open(url, '_blank');
-	});
-
 	/* Highlight all instances of the clicked symbol */
 	$('table').on('click', '.magic-symbol', function(){
 		var me = this;

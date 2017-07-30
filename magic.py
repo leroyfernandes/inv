@@ -8,6 +8,7 @@ import urllib
 import hashlib
 import time
 import json
+import pprint
 
 # This program will first download a list of stocks from the TSX. Then, for
 # each stock, it grabs company information, including company name and
@@ -156,6 +157,31 @@ class Database:
 			self.conn.commit()
 			#self.conn.close()
 
+	def addMagicCompaniesFromLog(self, magic_file):
+		if magic_file:
+			log_path = 'scraper/'+magic_file+'.log'
+			log_string = 'symbol,marcap,priceDate,quarterDate,capFilter,rank,\n'
+			with open(log_path, 'rb') as fin:
+				for line in fin:
+					while(True):
+						try:
+							json_data = json.loads(line)
+							# We have a complete onject here
+							log_string = log_string + (str(json_data['message']))
+							# Try and find a new JSON object
+							break
+						except ValueError:
+							# We don't have a complete JSON object
+							# read another line and try again
+							line += next(infile)
+			pprint.pprint(log_string)
+
+
+
+			f = open( "data\magic_csv\\"+magic_file+".csv", "w" );
+			f.write( log_string );
+			f.close()
+
 	def parseYahooQuotesJSON(self, yahoo_json):
 		if yahoo_json:
 			c = self.conn.cursor()
@@ -205,6 +231,11 @@ class Database:
 			a_a.append(item)
 		#print a_a
 		return a_a;
+
+	def getMagicDataDates(self):
+		c = self.conn.cursor()
+		c.execute("SELECT DISTINCT priceDate FROM MAGIC_COMPANIES")
+		return c.fetchall()
 
 # This class will fetch a web page from the WWW. However, if the web page
 # exists in the cache, it will instead use the cached version.
@@ -326,18 +357,31 @@ class MagicPage:
 						<li><a href="#">Analytics</a></li>
 						<li><a href="#">Export</a></li>
 					</ul>
+					<div class="table-selector">
+						<select class="form-control">
+							%s
+						</select>
+					</div>
 				</div>
 				<div class="col-sm-9 col-md-10 main">
-					<h2 class="sub-header">Section title</h2>
+					<h2 class="sub-header">Moneymaker</h2>
 					<div class="table-responsive">
-						<table class="table table-striped">
-							<thead>%s</thead>
-							<tbody>%s</tbody>
-						</table>
+						%s
 					</div>
 				</div>
 			</div>
 		</div>
+	"""
+
+	table_selector_options = """
+		<option >%s</option>
+	"""
+
+	magic_table = """
+		<table class="table table-striped magic-table-%s">
+			<thead>%s</thead>
+			<tbody>%s</tbody>
+		</table>
 	"""
 
 	thead_tr_wrapper = """
@@ -426,6 +470,38 @@ class MagicPage:
 		tbody_tr = self.tr_wrapper % ("tr"+str(capFilter), "tr"+str(capFilter), capFilter, tbody_td)
 		return tbody_tr
 
+	def magicPriceDates(self):
+		priceDates = self.db.getMagicDataDates()
+		options = ""
+		for date in priceDates:
+			options = options + self.table_selector_options % (str(date[0]))
+		
+		return options
+
+	def makeMagicTables(self):
+		priceDates = self.db.getMagicDataDates()
+		capFilters = self.db.getCapFilters()
+		
+		tables = ""
+		table = ""
+		thead = ""
+		tbody = ""
+		capFilterRanked = []
+		
+		#thead = self.makeThead(len(capFilterRanked))
+		thead = self.makeThead(30)
+		print thead 
+
+		for date in priceDates:
+			table_class_date = str(date[0])
+			for capFilter in capFilters:
+				capFilterRanked = self.db.getRankedByCapFilter(capFilter[0])
+				tbody = tbody + self.makeTbody(capFilterRanked, capFilter[0])
+				
+			tables = tables + self.magic_table % (table_class_date, thead, tbody)
+
+		return tables
+
 	def makeHTML(self):
 		import datetime
 
@@ -434,21 +510,14 @@ class MagicPage:
 		filename = program + '.html'
 		f = open(filename,'w')
 
-		thead = ""
-		tbody = ""
-		capFilterRanked = []
-		capFilters = self.db.getCapFilters()
 		#print capFilters
-		for capFilter in capFilters:
-			capFilterRanked = self.db.getRankedByCapFilter(capFilter[0])
-			tbody = tbody + self.makeTbody(capFilterRanked, capFilter[0])
-
-		thead = self.makeThead(len(capFilterRanked))
+		options = self.magicPriceDates()
+		tables = self.makeMagicTables()
 
 		head = self.head_wrapper
-		body = self.body_wrapper % (thead, tbody)
+		body = self.body_wrapper % (options, tables)
+		
 		html = self.html_wrapper % (head, body)
-
 		f.write(html)
 		f.close()
 
@@ -484,6 +553,10 @@ class Magic:
 		#print "Load Magic Companies CSV"
 		self.db.addMagicCompaniesFromCSV(magic_file)
 
+	def loadMagicCompaniesLog(self, magic_file):
+	#print "Load Magic Companies CSV"
+		self.db.addMagicCompaniesFromLog(magic_file)
+
 	def parseYahooQuotesJSON(self, yahoo_file):
 		self.db.parseYahooQuotesJSON(yahoo_file)
 
@@ -496,6 +569,9 @@ class Magic:
 			if sys.argv[i] == "--mcompanies":
 				magic_file = sys.argv[2]
 				self.loadMagicCompaniesCSV(magic_file)
+			if sys.argv[i] == "--mcompaniesl":
+				magic_file = sys.argv[2]
+				self.loadMagicCompaniesLog(magic_file)
 			if sys.argv[i] == "--makeMagicPage":
 				self.mp.makeHTML()
 			if sys.argv[i] == "--yahoo":
