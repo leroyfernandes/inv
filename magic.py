@@ -65,6 +65,8 @@ CREATE TABLE MAGIC_COMPANIES (
 
 DATABASE_NAME = "magic.db"
 CACHE_FOLDER = "cache"
+DATA_FOLDER = ""
+SCRAPER_FOLDER = ""
 
 class Database:
 	def __init__(self):
@@ -122,6 +124,19 @@ class Database:
 		else:
 			return name[0]
 
+	def getMagicCompaniesByPriceDate(self, priceDate):
+		#if not priceDate:
+		priceDate =  self.getLatestPriceDate()
+		pprint.pprint(priceDate)
+
+		c = self.conn.cursor()
+		c.execute("SELECT DISTINCT symbol FROM MAGIC_COMPANIES WHERE priceDate=?", (priceDate, ))
+		distinct_symbols = c.fetchall();
+
+		#pprint.pprint(str(distinct_symbols))
+
+		return distinct_symbols
+
 	def addCompanies(self, symbol, name, sector, industry):
 		c = self.conn.cursor()
 		c.execute("INSERT INTO COMPANIES VALUES (?, ?, ?, ?)",
@@ -176,11 +191,17 @@ class Database:
 							line += next(infile)
 			pprint.pprint(log_string)
 
-
-
 			f = open( "data\magic_csv\\"+magic_file+".csv", "w" );
 			f.write( log_string );
 			f.close()
+
+	def getYahooQuotesJSON(self, priceDate):
+		distinct_companies = self.getMagicCompaniesByPriceDate(self)
+		yahoo_format = ''
+		for company in distinct_companies:
+			yahoo_format = yahoo_format + str(company[0]) + ','
+
+		print str(yahoo_format)
 
 	def parseYahooQuotesJSON(self, yahoo_json):
 		if yahoo_json:
@@ -577,6 +598,9 @@ class Magic:
 			if sys.argv[i] == "--yahoo":
 				yahoo_file = sys.argv[2]
 				self.parseYahooQuotesJSON(yahoo_file)
+			if sys.argv[i] == "--distinct_sym_priceDate":
+				priceDate = ''
+				self.db.getYahooQuotesJSON(priceDate)
 				
 			if sys.argv[i] == "--help":
 				print

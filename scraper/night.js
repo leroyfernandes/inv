@@ -5547,6 +5547,7 @@ nightmare
     })
   })
     })
+  })
 
   .catch(function (error) {
     console.error('Search failed:', error);
